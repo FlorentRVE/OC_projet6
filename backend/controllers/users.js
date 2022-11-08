@@ -1,19 +1,35 @@
-exports.signup = (req, res, next) => {
-    bcrypt.hash(req.body.password, 10)
+// Importation du package Bcrypt et jswebtoken
+const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
+
+// On utilise le model d'User
+const User = require('../models/users');
+
+// Actions à effectuer selon la route appelée
+exports.signup = async (req, res, next) => {
+
+    const {email, password} = req.body;
+
+    console.log("Sign up effectué !")
+
+    await bcrypt.hash(password, 10)
       .then(hash => {
         const user = new User({
-          email: req.body.email,
+          email: email,
           password: hash
         });
         user.save()
           .then(() => res.status(201).json({ message: 'Utilisateur créé !' }))
-          .catch(error => res.status(400).json({ error }));
+          .catch(() => res.status(400).json({ message: 'Email déjà existant' }));
       })
       .catch(error => res.status(500).json({ error }));
   };
 
-exports.login = (req, res, next) => {
-    User.findOne({ email: req.body.email })
+exports.login = async (req, res, next) => {
+
+    console.log("Login effectué !")
+    
+    await User.findOne({ email: req.body.email })
         .then(user => {
             if (!user) {
                 return res.status(401).json({ error: 'Utilisateur non trouvé !' });
