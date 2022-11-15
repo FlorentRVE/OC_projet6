@@ -1,6 +1,8 @@
 // Importe le paquet express
 const express = require('express');
 
+const path = require('path');
+
 // Crée une application express
 const app = express();
 
@@ -18,7 +20,8 @@ mongoose.connect('mongodb+srv://oc_projet_6:oc_projet_6@atlascluster.xd5cg5x.mon
   .then(() => console.log('Connexion à MongoDB réussie !'))
   .catch(() => console.log('Connexion à MongoDB échouée !'));
 
-// Configuration
+// ==== Configuration ====
+// CORS
 app.use((req, res, next) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content, Accept, Content-Type, Authorization');
@@ -26,8 +29,12 @@ app.use((req, res, next) => {
   next();
 });
 
+// Ecoute les requêtes concernant la route '/images' et les liér au répertoire 'images'
+app.use('/images', express.static(path.join(__dirname, 'images')));
+
 app.use(express.urlencoded({extended: true})); // Permet de récupérer le body de la requête
 app.use(express.json());
+// ==== Fin des configuration ====
 
 // Affectation des routes
 app.use('/api/auth', UserRoutes);
