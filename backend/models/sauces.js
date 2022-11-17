@@ -2,6 +2,7 @@ const mongoose = require('mongoose');
 
 // Créer un schéma de donnée pour les sauces
 const SauceSchema = mongoose.Schema({
+  userId: { type: String, required: true },
   name: { type: String, required: true },
   manufacturer: { type: String, required: true },
   description: { type: String, required: true },
@@ -10,8 +11,8 @@ const SauceSchema = mongoose.Schema({
   heat: { type: Number, required: true },
   likes: { type: Number, required: true },
   dislikes: { type: Number, required: true },
-  usersLiked: { type: Array, required: true },
-  usersDisliked: { type: Array, required: true }
+  usersLiked: [{ type: String, required: true }],
+  usersDisliked: [{ type: String, required: true }]
 });
 
 // Transforme le schéma en modèle utilisable

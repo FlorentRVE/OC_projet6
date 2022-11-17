@@ -1,6 +1,7 @@
 // Importe le paquet express
 const express = require('express');
 
+// Importe le paquet path pour le statique
 const path = require('path');
 
 // Crée une application express
@@ -32,7 +33,8 @@ app.use((req, res, next) => {
 // Ecoute les requêtes concernant la route '/images' et les liér au répertoire 'images'
 app.use('/images', express.static(path.join(__dirname, 'images')));
 
-app.use(express.urlencoded({extended: true})); // Permet de récupérer le body de la requête
+// Permet de récupérer le body de la requête
+app.use(express.urlencoded({extended: true}));
 app.use(express.json());
 // ==== Fin des configuration ====
 
