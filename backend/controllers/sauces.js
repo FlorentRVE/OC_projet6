@@ -1,6 +1,6 @@
 // Importation du package jswebtoken
 const jwt = require('jsonwebtoken');
-const { update } = require('../models/sauces');
+const fs = require('fs');
 
 // On utilise le model Sauce
 const Sauce = require('../models/sauces');
@@ -35,7 +35,7 @@ exports.createSauces = (req, res, next) => {
 exports.singleSauces = (req, res, next) => {
 
   Sauce.findOne({_id: req.params.id})
-    .then((sauce) => {res.status(200).json(sauce)})
+    .then((sauce) => {res.status(200).json(sauce), console.log('détail de la sauce:' + sauce)})
     .catch((error) => {res.status(404).json({error: error})});
 };
 
@@ -78,9 +78,17 @@ exports.modifySauces = async (req, res, next) => {
 
 exports.deleteSauces = (req, res, next) => {
 
-  Sauce.deleteOne({_id: req.params.id})
-    .then(() => {res.status(200).json({message: 'Sauce effacée !'})})
-    .catch((error) => {res.status(400).json({error: error})});
+  Sauce.findOne({ _id: req.params.id })
+  .then(sauce => {
+    
+      const filename = sauce.imageUrl.split('/images/')[1];
+      fs.unlink(`images/${filename}`, () => {
+          Sauce.deleteOne({ _id: req.params.id })
+              .then(() => res.status(200).json({ message: 'Sauce effacée !'}))
+              .catch(error => res.status(400).json({ error }));
+      })
+  })
+  .catch(error => res.status(500).json({ error }));
 };
 
 exports.arraySauces = (req, res, next) => {
@@ -89,6 +97,51 @@ exports.arraySauces = (req, res, next) => {
     .catch((error) => {res.status(400).json({error: error})});
 };
 
-exports.likeSauces = (req, res, next) => {
+exports.likeSauces = async (req, res, next) => {
 
+    // Récupération des données dans le body de la requête
+    const sauceObject = req.body;
+
+    // Récupération de la sauce dans la BDD
+    const actualSauce = await Sauce.findOne({_id: req.params.id})
+
+    // Récupération des likes et userID dans la requête
+    const reqLikes = sauceObject.like
+    const reqID = sauceObject.userId
+
+    const newLike = {
+      likes: 0,
+      dislikes: 0,
+      usersLiked: actualSauce.usersLiked,
+      usersDisliked: actualSauce.usersDisliked,
+  };
+
+    // Gestion des likes et dislikes
+    switch (reqLikes) {
+      case 1:  // sauce liked
+      newLike.usersLiked.push(reqID);
+      break;
+      case -1:  // sauce disliked
+      newLike.usersDisliked.push(reqID);
+      break;
+      case 0:  // Annulation like/dislike
+          if (newLike.usersLiked.includes(reqID)) {
+                // si on annule le like
+              const index = newLike.usersLiked.indexOf(reqID);
+              newLike.usersLiked.splice(index, 1);
+        } else {
+            // si on annule le dislike
+              const index = newLike.usersDisliked.indexOf(reqID);
+               newLike.usersDisliked.splice(index, 1);
+        }
+      break;
+    };
+
+  // Calcul du nombre de likes/dislikes en fonction de l'array correspondant
+  newLike.likes = newLike.usersLiked.length;
+  newLike.dislikes = newLike.usersDisliked.length;
+
+Sauce.updateOne({_id: req.params.id}, newLike)
+.then((result) => {res.status(201).json({message: 'Like statut changé !'}), console.log(result)})
+.catch((error) => {res.status(400).json({error: error})});
 };
